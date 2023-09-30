@@ -7,6 +7,7 @@
   </capacitor-google-map>
   </div>
   Aktualna lokalizacja: {{ currentLocation.lat }}, {{ currentLocation.lng }}
+  <AddTootBtnVue />
   </template>
 
   <style>
@@ -23,6 +24,8 @@
   import { GoogleMap } from "@capacitor/google-maps";
   import { Geolocation, GeolocationPosition } from '@capacitor/geolocation';
   import { watch } from "vue";
+import AddTootBtnVue from "@/components/AddTootBtn.vue";
+
   
   const currentLocation = ref({ lat: 0, lng: 0 });
   
