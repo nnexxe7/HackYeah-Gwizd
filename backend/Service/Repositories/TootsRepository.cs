@@ -20,4 +20,15 @@ public class TootsRepository : MongoDbGenericRepository<Toot, Guid>, ITootsRepos
 
 		return result;
 	}
+
+	public long? DeleteExpired()
+	{
+		FilterDefinitionBuilder<Toot>? b = Builders<Toot>.Filter;
+		FilterDefinition<Toot>? query = b.And(b.Lte(n => n.ExpiresAt, DateTime.UtcNow));
+
+		IMongoCollection<Toot> collection = DbAccess.GetCollection<Toot>();
+		DeleteResult? deleteResult = collection.DeleteMany(query);
+
+		return deleteResult?.DeletedCount;
+	}
 }

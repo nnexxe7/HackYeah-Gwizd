@@ -3,7 +3,7 @@
 public static class Consts
 {
 	public const double SingularityPrecision = 0.5f;
-	public const double ExpiryTime = 2;
+	public const double ExpiryTimeInHours = 3;
 	public const double ExpiryBump = 0.5f;
 
 	public const int PointsForToot = 10;

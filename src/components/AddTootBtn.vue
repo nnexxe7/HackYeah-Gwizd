@@ -56,11 +56,7 @@ const setTootType = (type: string) => {
   
 </script>
   
-<<<<<<< HEAD
-  <style>
-  </style>
-  
-  
+
 =======
 <style>
 
@@ -89,4 +85,3 @@ ion-label{
 }
 
 </style>
->>>>>>> 6e78ff6a9861771d3a27c3cd7256fd9b477e19a0

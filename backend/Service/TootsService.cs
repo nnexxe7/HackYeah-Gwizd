@@ -4,8 +4,8 @@ using Amazon;
 using Amazon.Runtime;
 using Amazon.S3.Transfer;
 using Amazon.S3;
+using Amazon.S3.Model;
 using GWIZD.Core;
-using GWIZD.Core.Data;
 using GWIZD.Model;
 using GWIZD.Service;
 using MongoDB.Driver;
@@ -34,6 +34,14 @@ public class TootsService : ITootsService
 		return _repository.Find(FilterDefinition<Toot>.Empty);
 	}
 
+	public List<Toot> FindExpired()
+	{
+		FilterDefinitionBuilder<Toot>? b = Builders<Toot>.Filter;
+		FilterDefinition<Toot>? query = b.And(b.Lte(n => n.ExpiresAt, DateTime.UtcNow));
+
+		return _repository.Find(query);
+	}
+
 	public List<Toot> FindByPoint(Location location, double radius)
 	{
 		if (location == null) throw new ArgumentNullException(nameof(location));
@@ -49,7 +57,7 @@ public class TootsService : ITootsService
 		bool canSubmit = _duplicateDetector.CanSubmit(toot, out Toot? duplicate);
 		if (canSubmit)
 		{
-			toot.ExpiresAt = DateTime.UtcNow.Add(TimeSpan.FromHours(Consts.ExpiryTime));
+			toot.ExpiresAt = DateTime.UtcNow.Add(TimeSpan.FromHours(Consts.ExpiryTimeInHours));
 			_usersService.IncreasePoints(toot.SubmittedBy, Consts.PointsForToot);
 
 			return _repository.Save(toot);
@@ -65,6 +73,21 @@ public class TootsService : ITootsService
 		return null;
 	}
 
+	public void Delete(Toot toot)
+	{
+		if (toot == null) throw new ArgumentNullException(nameof(toot));
+
+		try
+		{
+			DeleteFromS3(toot);
+		}
+		catch (Exception ex)
+		{
+		}
+		
+		_repository.Delete(toot.Id);
+	}
+
 	public void AddPhotoAttachment(Guid tootId, string submittedBy, byte[] fileContent, string extension)
 	{
 		if (fileContent == null) throw new ArgumentNullException(nameof(fileContent));
@@ -75,7 +98,7 @@ public class TootsService : ITootsService
 		Task.Run(() =>
 		{
 			string miniaturePhotoUrl = CreateAndUploadMiniature(fileContent, extension);
-			string originalPhotoUrl = Upload(fileContent, extension);
+			string originalPhotoUrl = UploadToS3(fileContent, extension);
 
 			TaskHelper.Repeat(() =>
 			{
@@ -106,7 +129,7 @@ public class TootsService : ITootsService
 				using (var reizedStream = new MemoryStream())
 				{
 					img.Save(reizedStream, ImageFormat.Jpeg);
-					return Upload(reizedStream.ToArray(), "_min" + extension);
+					return UploadToS3(reizedStream.ToArray(), "_min" + extension);
 				}
 			}
 		}
@@ -116,7 +139,30 @@ public class TootsService : ITootsService
 		}
 	}
 
-	private string Upload(byte[] fileContent, string extension)
+	private void DeleteFromS3(Toot toot)
+	{
+		if (toot.Attachments == null || toot.Attachments.Count == 0) return;
+
+		string accessKey = _settingsProvider.Get("s3_accesskey");
+		string secretKey = _settingsProvider.Get("s3_secretkey");
+		string bucketName = _settingsProvider.Get("bucket_name");
+		var amazonS3Client = new AmazonS3Client(new BasicAWSCredentials(accessKey, secretKey), RegionEndpoint.EUCentral1);
+
+		foreach (Attachment attachment in toot.Attachments.Where(n => n.Type == AttachmentType.Photo))
+		{
+			if (!string.IsNullOrEmpty(attachment.Parameter1))
+			{
+				DeleteObjectResponse? result = amazonS3Client.DeleteObjectAsync(bucketName, Path.GetFileName(attachment.Parameter1)).Result;
+			}
+
+			if (!string.IsNullOrEmpty(attachment.Parameter2))
+			{
+				DeleteObjectResponse? result = amazonS3Client.DeleteObjectAsync(bucketName, Path.GetFileName(attachment.Parameter2)).Result;
+			}
+		}
+	}
+
+	private string UploadToS3(byte[] fileContent, string extension)
 	{
 		Guid photoId = Guid.NewGuid();
 		string fileName = photoId + extension;
@@ -130,7 +176,7 @@ public class TootsService : ITootsService
 		{
 			fileTransferUtility.Upload(stream, _settingsProvider.Get("bucket_name"), fileName);
 		}
-
+		
 		return $"https://{_settingsProvider.Get("cloud_front")}/{fileName}";
 	}
 }

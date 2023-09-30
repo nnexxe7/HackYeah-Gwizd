@@ -1,22 +1,46 @@
 <template>
     <ion-header>
             <ion-toolbar>
-              <ion-title>Modal</ion-title>
+              <ion-title>{{formTitle}}</ion-title>
               <ion-buttons slot="end">
                 <ion-button @click="closeModal()">Close</ion-button>
               </ion-buttons>
             </ion-toolbar>
           </ion-header>
           <ion-content class="ion-padding">
-            <p v-if="tootType=='wildAnimal'">
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. Magni illum quidem recusandae ducimus quos
-              reprehenderit. Veniam, molestias quos, dolorum consequuntur nisi deserunt omnis id illo sit cum qui. Eaque,
-              dicta.
-            </p>
+            <form @submit.prevent="toot" ref="form">
+                <ion-list class="inputs-list">
+                    <ion-item>
+                        <ion-select class="input-select" name="relatedAnimal" label="Animal type" fill="outline" label-placement="floating">
+                            <ion-select-option value=1>Cat</ion-select-option>
+                            <ion-select-option value=2>Dog</ion-select-option>
+                            <ion-select-option value=3>Fox</ion-select-option>
+                            <ion-select-option value=4>Hedgehog</ion-select-option>
+                            <ion-select-option value=5>Boar</ion-select-option>
+                            <ion-select-option value=6>Deer</ion-select-option>
+                            <ion-select-option value=7>Snake</ion-select-option>
+                        </ion-select>
+                    </ion-item>
+                    <ion-item v-if="tootType=='animalActivity'">
+                        <ion-select class="input-select" label="Activity type" fill="outline" label-placement="floating">
+                            <ion-select-option value=1>Trace</ion-select-option>
+                            <ion-select-option value=2>Damage</ion-select-option>
+                            <ion-select-option value=3>Nest</ion-select-option>
+                            <ion-select-option value=4>Other</ion-select-option>
+                        </ion-select>
+                    </ion-item>
+                    <ion-item class="description">
+                        <ion-input label="Description" name="description" labelPlacement="floating" fill="outline"></ion-input>
+                    </ion-item>
+                    <ion-checkbox class="isDangerous" name="isDangerous" value="true" >Is dangerous?</ion-checkbox>
+                    
+                </ion-list>
+                <ion-button type="submit" class="submit-btn">Toot!</ion-button>
+            </form>
           </ion-content>
     </template>
 <script lang="ts">
-import { PropType, defineComponent } from 'vue';
+import { PropType, defineComponent, ref, computed, onUnmounted } from 'vue';
 
 export default defineComponent({
   name: 'LostAnimalForm',
@@ -26,14 +50,102 @@ export default defineComponent({
       required: true
     }
   },
-  setup(props) {
-    return props.tootType
-  },
-  methods: {
-    closeModal() {
-        console.log('close modal')
-      this.$emit('close-modal');
+  setup(props,{emit}) {
+    const form = ref(null);
+    
+    const typeMapping = {
+      wildAnimal: 1,
+      animalActivity: 2,
+      humanActivity: 3,
+      lostAnimal: 4,
+      Carcass: 5
+    };
+
+    const tootTypeNumeric = computed(() => typeMapping[props.tootType]);
+
+    const formTitle = computed(() => {
+        switch(props.tootType) {
+          case 'lostAnimal': return 'Lost Animal';
+          case 'wildAnimal': return 'Wild Animal';
+          case 'animalActivity': return 'Animal Activity';
+          case 'Carcass': return 'Carcass';
+          default: return '';
+        }
+    });
+    
+    const toot = async () => {
+      try {
+        const formData = new FormData(form.value);
+        console.log(formData.get('isDangerous'))
+        // Create data object from formData
+        const data = {
+          type: tootTypeNumeric.value,
+          relatedAnimal: Number(formData.get('relatedAnimal')),
+          description: formData.get('description'),
+          isDangerous: formData.get('isDangerous') == 'true',
+          location: {
+        "latitude": 15,
+        "longtitude": 13
+    },
+          submittedBy: 'testuser'
+        };
+
+        const response = await fetch('http://35.158.22.100:5000/api/toots/submit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        const responseData = await response.json();
+        console.log(responseData);
+        closeModal();
+
+      } catch (error) {
+        console.error('There was an error sending the data:', error);
+      }
+    };
+
+    const closeModal = () => {
+      emit('close-modal');
+    };
+
+    return {
+        form, // Ensure you're returning the ref
+        formTitle,
+        closeModal,
+        toot
     }
-  }
+  } 
 });
 </script>
+<style lang="css">
+    .inputs-list{
+        padding-top: 20px;
+    }
+    .input-select{
+        padding-top: 20px;
+    }
+    .input-fill-outline{
+        margin-top: 20px;
+        padding: 20px;
+    }
+    .isDangerous{
+        padding-top: 20px;
+        padding-left: 18px;
+    }
+    .description .label-text-wrapper{
+        padding-left: 15px;
+    }
+    .submit-btn{
+        display: flex;
+        align-items: center;
+        margin-top: 30px;
+    }
+        
+</style>
