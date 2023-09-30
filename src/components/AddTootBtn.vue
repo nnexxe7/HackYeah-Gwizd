@@ -20,6 +20,7 @@
  import { ref } from 'vue';
 import LostAnimalForm from './LostAnimalForm.vue';
 
+
 const isOpen = ref(false);
 
 const setOpen = (open: boolean) => {
