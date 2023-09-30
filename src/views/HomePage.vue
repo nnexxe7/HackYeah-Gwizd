@@ -6,6 +6,12 @@
     >
     </capacitor-google-map>
   </div>
+  <div class="strip">
+    <ion-avatar class="avatar">
+      <img alt="Up" src="../assets/wildanimal.png" />
+    </ion-avatar>
+    <div class="points">PUNKTY</div>
+  </div>
   <AddTootBtnVue />
 </template>
 
@@ -161,3 +167,16 @@ async function createMap() {
   }
 }
 </script>
+<style>
+.strip{
+  height: 40px;
+  position: absolute;
+  top: 0px;
+  width: 100%;
+  background-color: #fff;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+}
+
+</style>
