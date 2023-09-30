@@ -42,6 +42,8 @@ const setTootType = (type: string) => {
 </script>
   
   <style>
+  .ion-fab-button {
+  z-index: 99999;}
   </style>
   
   

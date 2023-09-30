@@ -1,4 +1,5 @@
 <template>
+      <AddTootBtnVue />
   <div>
     <capacitor-google-map
       ref="mapRef"
@@ -6,7 +7,6 @@
     >
     </capacitor-google-map>
   </div>
-  <AddTootBtnVue />
 </template>
 
 <style>
