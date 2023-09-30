@@ -26,6 +26,8 @@ import './theme/variables.css';
 const app = createApp(App)
   .use(IonicVue)
   .use(router);
+
+app.config.globalProperties.$googleMapsApiKey = 'TWOJ_KLUCZ_API';
   
 router.isReady().then(() => {
   app.mount('#app');
