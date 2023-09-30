@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.ViewComponents;
 using Ninject;
 using Service;
+using Service.Repositories;
 
 namespace WebApi
 {
@@ -19,13 +20,26 @@ namespace WebApi
 			builder.Services.AddControllers();
 			builder.Services.AddSingleton<IControllerActivator>(new NinjectControllerActivator(kernel));
 			builder.Services.AddSingleton<IViewComponentActivator>(new NinjectViewComponentActivator(kernel));
+			builder.Services.AddHostedService<CleanupBackgroundService>(provider => kernel.Get<CleanupBackgroundService>());
 			builder.WebHost.UseUrls("http://0.0.0.0:5000");
+			builder.Services.AddCors(options =>
+			{
+				options.AddPolicy("cors_policy",
+					policy =>
+					{
+						policy
+							.AllowAnyHeader()
+							.AllowAnyOrigin()
+							.AllowAnyMethod();
+					});
+			});
 
 			var app = builder.Build();
 
 			// Configure the HTTP request pipeline.
 
 			app.UseAuthorization();
+			app.UseCors("cors_policy");
 
 
 			app.MapControllers();
