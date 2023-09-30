@@ -1,10 +1,13 @@
 ﻿using System.Drawing;
+using System.Drawing.Imaging;
 using Amazon;
 using Amazon.Runtime;
 using Amazon.S3.Transfer;
 using Amazon.S3;
+using GWIZD.Core;
 using GWIZD.Core.Data;
 using GWIZD.Model;
+using GWIZD.Service;
 using MongoDB.Driver;
 using Service.Repositories;
 
@@ -14,12 +17,16 @@ public class TootsService : ITootsService
 {
 	private readonly ITootsRepository _repository;
 	private readonly ISettingsProvider _settingsProvider;
+	private readonly ITootsDuplicateDetector _duplicateDetector;
+	private readonly IUsersService _usersService;
 
 
-	public TootsService(ITootsRepository repository, ISettingsProvider settingsProvider)
+	public TootsService(ITootsRepository repository, ISettingsProvider settingsProvider, ITootsDuplicateDetector duplicateDetector, IUsersService usersService)
 	{
 		_repository = repository;
 		_settingsProvider = settingsProvider;
+		_duplicateDetector = duplicateDetector;
+		_usersService = usersService;
 	}
 
 	public List<Toot> FindAll()
@@ -35,12 +42,30 @@ public class TootsService : ITootsService
 		return toots.Where(n => n.Location != null && n.Location.CalculateDistance(location) <= radius).ToList();
 	}
 
-	public Guid Submit(Toot toot)
+	public Guid? Submit(Toot toot)
 	{
-		return _repository.Save(toot);
+		if (toot == null) throw new ArgumentNullException(nameof(toot));
+
+		bool canSubmit = _duplicateDetector.CanSubmit(toot, out Toot? duplicate);
+		if (canSubmit)
+		{
+			toot.ExpiresAt = DateTime.UtcNow.Add(TimeSpan.FromHours(Consts.ExpiryTime));
+			_usersService.IncreasePoints(toot.SubmittedBy, Consts.PointsForToot);
+
+			return _repository.Save(toot);
+		}
+
+		if (duplicate != null)
+		{
+			duplicate.ExpiresAt = duplicate.ExpiresAt.Add(TimeSpan.FromHours(Consts.ExpiryBump));
+			//TODO: async, it should be done via message bus
+			_repository.Save(duplicate);
+		}
+
+		return null;
 	}
 
-	public void AddPhotoAttachment(Guid tootId, byte[] fileContent, string extension)
+	public void AddPhotoAttachment(Guid tootId, string submittedBy, byte[] fileContent, string extension)
 	{
 		if (fileContent == null) throw new ArgumentNullException(nameof(fileContent));
 
@@ -49,14 +74,7 @@ public class TootsService : ITootsService
 
 		Task.Run(() =>
 		{
-			string miniaturePhotoUrl = string.Empty;
-			//using (var stream = new MemoryStream(fileContent))
-			//{
-			//	Image img = new Bitmap(stream);
-			//	Image miniature = img.GetThumbnailImage((int)img.Width / 5, (int)img.Width / 5, () => false, IntPtr.Zero);
-			//	miniaturePhotoUrl = Upload(ImageToBytes(miniature), "_min" + extension);
-			//}
-			
+			string miniaturePhotoUrl = CreateAndUploadMiniature(fileContent, extension);
 			string originalPhotoUrl = Upload(fileContent, extension);
 
 			TaskHelper.Repeat(() =>
@@ -67,25 +85,39 @@ public class TootsService : ITootsService
 					AddedAt = DateTime.UtcNow,
 					Type = AttachmentType.Photo,
 					Parameter1 = originalPhotoUrl,
-					Parameter2 = miniaturePhotoUrl
+					Parameter2 = miniaturePhotoUrl,
+					SubmittedBy = submittedBy
 				});
 				_repository.Save(freshToot);
+				_usersService.IncreasePoints(submittedBy, Consts.PointsForPhoto);
 			});
 		});
 	}
 
-	private byte[] ImageToBytes(Image img)
+	private string CreateAndUploadMiniature(byte[] fileContent, string extension)
 	{
-		using (var ms = new MemoryStream())
+		try
 		{
-			img.Save(ms, img.RawFormat);
-			return ms.ToArray();
+			using (var stream = new MemoryStream(fileContent))
+			{
+				Image original = new Bitmap(stream);
+				Image img = new Bitmap(original, new Size((int)original.Width / 5, (int)original.Height / 5));
+
+				using (var reizedStream = new MemoryStream())
+				{
+					img.Save(reizedStream, ImageFormat.Jpeg);
+					return Upload(reizedStream.ToArray(), "_min" + extension);
+				}
+			}
+		}
+		catch
+		{
+			return string.Empty;
 		}
 	}
 
 	private string Upload(byte[] fileContent, string extension)
 	{
-		const string bucketName = "gwizdphotos";
 		Guid photoId = Guid.NewGuid();
 		string fileName = photoId + extension;
 
@@ -96,9 +128,9 @@ public class TootsService : ITootsService
 		var fileTransferUtility = new TransferUtility(amazonS3Client);
 		using (var stream = new MemoryStream(fileContent))
 		{
-			fileTransferUtility.Upload(stream, bucketName, fileName);
+			fileTransferUtility.Upload(stream, _settingsProvider.Get("bucket_name"), fileName);
 		}
 
-		return $"https://{bucketName}.s3.eu-central-1.amazonaws.com/{fileName}";
+		return $"https://{_settingsProvider.Get("cloud_front")}/{fileName}";
 	}
 }

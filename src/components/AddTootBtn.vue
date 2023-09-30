@@ -4,27 +4,39 @@
           <ion-icon :icon="chevronUpCircle"></ion-icon>
         </ion-fab-button>
         <ion-fab-list side="top">
-          <ion-fab-button class="lostAnimal" @click="setOpen(true)">
+          <ion-fab-button class="lostAnimal" @click="setTootType('lostAnimal')">
+            <ion-icon :icon="document">lost</ion-icon>
+          </ion-fab-button>
+          <ion-fab-button class="wildAnimal" @click="setTootType('wildAnimal')">
+            <ion-icon :icon="document">lost</ion-icon>
+          </ion-fab-button>
+          <ion-fab-button class="animalActivity" @click="setTootType('animalActivity')">
+            <ion-icon :icon="document">lost</ion-icon>
+          </ion-fab-button>
+          <ion-fab-button class="Carcass" @click="setTootType('Carcass')">
             <ion-icon :icon="document">lost</ion-icon>
           </ion-fab-button>
           
         </ion-fab-list>
     </ion-fab>
     <ion-modal :is-open="isOpen">
-      <lost-animal-form @close-modal="setOpen(false)" />
+      <modal-form :toot-type="tootType" @close-modal="isOpen=false" />
     </ion-modal>
   
 </template>
 <script lang="ts" setup>
  import { IonButtons, IonButton, IonModal, IonHeader, IonToolbar, IonContent, IonTitle } from '@ionic/vue';
  import { ref } from 'vue';
-import LostAnimalForm from './LostAnimalForm.vue';
+import ModalForm from './ModalForm.vue';
 
 
 const isOpen = ref(false);
+const tootType=ref('')
 
-const setOpen = (open: boolean) => {
-  isOpen.value = open;
+const setTootType = (type: string) => {
+  
+  tootType.value=type;
+  isOpen.value = true;
 };
   
 </script>

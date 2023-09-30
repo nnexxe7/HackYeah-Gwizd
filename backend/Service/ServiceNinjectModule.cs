@@ -9,5 +9,8 @@ public class ServiceNinjectModule : NinjectModule
 	{
 		Bind<ITootsRepository>().To<TootsRepository>().InSingletonScope();
 		Bind<ITootsService>().To<TootsService>().InSingletonScope();
+		Bind<IUsersRepository>().To<UsersRepository>().InSingletonScope();
+		Bind<IUsersService>().To<UsersService>().InSingletonScope();
+		Bind<ITootsDuplicateDetector>().To<TootsDuplicateDetector>().InSingletonScope();
 	}
 }

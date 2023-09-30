@@ -8,7 +8,7 @@
             </ion-toolbar>
           </ion-header>
           <ion-content class="ion-padding">
-            <p>
+            <p v-if="tootType=='wildAnimal'">
               Lorem ipsum dolor sit amet consectetur adipisicing elit. Magni illum quidem recusandae ducimus quos
               reprehenderit. Veniam, molestias quos, dolorum consequuntur nisi deserunt omnis id illo sit cum qui. Eaque,
               dicta.
@@ -16,10 +16,19 @@
           </ion-content>
     </template>
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { PropType, defineComponent } from 'vue';
 
 export default defineComponent({
   name: 'LostAnimalForm',
+  props: {
+    tootType: {
+        type: String as PropType<string>,
+      required: true
+    }
+  },
+  setup(props) {
+    return props.tootType
+  },
   methods: {
     closeModal() {
         console.log('close modal')
