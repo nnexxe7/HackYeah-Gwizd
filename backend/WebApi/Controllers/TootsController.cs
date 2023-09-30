@@ -1,6 +1,6 @@
 using GWIZD.Model;
 using Microsoft.AspNetCore.Mvc;
-using Service.Repositories;
+using Service;
 using WebApi.Model;
 
 namespace WebApi.Controllers;
@@ -9,20 +9,42 @@ namespace WebApi.Controllers;
 [Route("api/toots")]
 public class TootsController : ControllerBase
 {
-	private readonly ITootsRepository _tootsRepository;
+	private readonly ITootsService _tootsService;
 
 
-	public TootsController(ITootsRepository tootsRepository)
+	public TootsController(ITootsService tootsService)
 	{
-		_tootsRepository = tootsRepository;
+		_tootsService = tootsService;
 	}
 
-	[HttpPost("find")]
-	public IActionResult Find()
+	[HttpPost("findAll")]
+	public IActionResult FindAll()
 	{
-		List<Toot> result = _tootsRepository.Find();
+		List<Toot> result = _tootsService.FindAll();
 
 		return Ok(result);
+	}
+
+	[HttpPost("findByPoint")]
+	public IActionResult FindByPoint(FindByPointDto dto)
+	{
+		if (dto == null) return BadRequest();
+
+		List<Toot> result = _tootsService.FindByPoint(dto.Location, dto.Radius);
+
+		return Ok(result);
+	}
+
+	[HttpPost("addPhotoAttachment")]
+	public IActionResult AddPhotoAttachment(Guid tootId)
+	{
+		foreach (IFormFile file in Request.Form.Files)
+		{
+			byte[] fileContent = ReadFully(file.OpenReadStream());
+			_tootsService.AddPhotoAttachment(tootId, fileContent, ".jpg");
+		}
+
+		return Ok();
 	}
 
 	[HttpPost("submit")]
@@ -30,9 +52,24 @@ public class TootsController : ControllerBase
 	{
 		Toot toot = BuildFromDto(dto);
 
-		_tootsRepository.Save(toot);
+		Guid tootId = _tootsService.Submit(toot);
 
-		return Ok(toot.Id);
+		return Ok(tootId);
+	}
+
+
+	private static byte[] ReadFully(Stream input)
+	{
+		byte[] buffer = new byte[16 * 1024];
+		using (MemoryStream ms = new MemoryStream())
+		{
+			int read;
+			while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
+			{
+				ms.Write(buffer, 0, read);
+			}
+			return ms.ToArray();
+		}
 	}
 
 	private static Toot BuildFromDto(TootDto dto)

@@ -2,9 +2,9 @@
 
 public enum TootType
 {
-	LivingAnimal = 1,
+	WildAnimal = 1,
 	AnimalActivity = 2,
-	ArtificalNest = 3,
-	NaturalNest = 4,
+	HumanActivity = 3,
+	LostAnimal = 4,
 	Carcass = 5,
 }
