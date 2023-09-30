@@ -1,0 +1,7 @@
+{
+  "name": "gwizd-hackyeah",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue-vite"
+}
