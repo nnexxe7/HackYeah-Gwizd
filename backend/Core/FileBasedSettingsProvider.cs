@@ -1,6 +1,6 @@
-﻿namespace GWIZD.Core.Data;
+﻿namespace GWIZD.Core;
 
-class FileBasedSettingsProvider : ISettingsProvider
+public class FileBasedSettingsProvider : ISettingsProvider
 {
 	private readonly Lazy<Dictionary<string, string>> _connectionStrings;
 

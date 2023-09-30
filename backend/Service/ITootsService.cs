@@ -10,5 +10,5 @@ public interface ITootsService
 
 	Guid? Submit(Toot toot);
 
-	void AddPhotoAttachment(Guid tootId, byte[] fileContent, string extension);
+	void AddPhotoAttachment(Guid tootId, string submittedBy, byte[] fileContent, string extension);
 }

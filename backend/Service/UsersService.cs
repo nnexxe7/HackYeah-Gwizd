@@ -20,7 +20,10 @@ public class UsersService : IUsersService
 		User user = _usersRepository.Get(username.ToLower());
 		if (user == null)
 		{
-			_usersRepository.Save(new User { Id = username.ToLower() });
+			var newUser = new User { Id = username.ToLower() };
+			_usersRepository.Save(newUser);
+
+			return newUser;
 		}
 
 		return user;
@@ -30,7 +33,7 @@ public class UsersService : IUsersService
 	{
 		if (username == null) throw new ArgumentNullException(nameof(username));
 
-		User user = _usersRepository.Get(username.ToLower());
+		User user = EnsureUserExists(username);
 		if (user == null) throw new ArgumentNullException(nameof(username));
 		user.Points += points;
 

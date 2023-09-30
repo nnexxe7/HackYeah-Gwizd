@@ -5,4 +5,5 @@ namespace Service.Repositories;
 
 public interface IUsersRepository : IGenericRepository<User, string>
 {
+	List<User> GetUsersWithHighestPoints(int count);
 }

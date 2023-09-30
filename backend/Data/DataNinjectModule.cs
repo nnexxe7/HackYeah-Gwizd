@@ -8,6 +8,6 @@ public class DataNinjectModule : NinjectModule
 	{
 		Bind<IMongoDbIndexBuilder>().To<MongoDbIndexBuilder>().InSingletonScope();
 		Bind<IMongoDbAccess>().To<MongoDbAccess>().InSingletonScope();
-		Bind<ISettingsProvider>().To<FileBasedSettingsProvider>().InSingletonScope();
+		
 	}
 }

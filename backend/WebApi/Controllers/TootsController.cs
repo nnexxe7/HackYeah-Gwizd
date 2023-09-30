@@ -36,12 +36,12 @@ public class TootsController : ControllerBase
 	}
 
 	[HttpPost("addPhotoAttachment")]
-	public IActionResult AddPhotoAttachment(Guid tootId)
+	public IActionResult AddPhotoAttachment(Guid tootId, string submittedBy)
 	{
 		foreach (IFormFile file in Request.Form.Files)
 		{
 			byte[] fileContent = ReadFully(file.OpenReadStream());
-			_tootsService.AddPhotoAttachment(tootId, fileContent, ".jpg");
+			_tootsService.AddPhotoAttachment(tootId, submittedBy, fileContent, ".jpg");
 		}
 
 		return Ok();
