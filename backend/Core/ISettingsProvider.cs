@@ -1,4 +1,4 @@
-﻿namespace GWIZD.Core.Data;
+﻿namespace GWIZD.Core;
 
 public interface ISettingsProvider
 {
