@@ -8,7 +8,7 @@ public interface ITootsService
 
 	List<Toot> FindByPoint(Location location, double radius);
 
-	Guid Submit(Toot toot);
+	Guid? Submit(Toot toot);
 
 	void AddPhotoAttachment(Guid tootId, byte[] fileContent, string extension);
 }

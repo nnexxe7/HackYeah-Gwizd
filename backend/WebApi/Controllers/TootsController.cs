@@ -50,9 +50,12 @@ public class TootsController : ControllerBase
 	[HttpPost("submit")]
 	public IActionResult Submit(TootDto dto)
 	{
+		if (dto == null) return BadRequest();
+		if (dto.Location == null) return BadRequest();
+
 		Toot toot = BuildFromDto(dto);
 
-		Guid tootId = _tootsService.Submit(toot);
+		Guid? tootId = _tootsService.Submit(toot);
 
 		return Ok(tootId);
 	}
@@ -76,9 +79,13 @@ public class TootsController : ControllerBase
 	{
 		return new Toot
 		{
-			Location = dto.Location,
 			Id = Guid.NewGuid(),
-			Species = dto.Species,
+			Location = dto.Location,
+			Activity = dto.Activity,
+			RelatedAnimal = dto.RelatedAnimal,
+			Description = dto.Description,
+			IsDangerous = dto.IsDangerous,
+			SubmittedBy = dto.SubmittedBy,
 			SubmittedAt = DateTime.UtcNow,
 			Type = dto.Type
 		};
