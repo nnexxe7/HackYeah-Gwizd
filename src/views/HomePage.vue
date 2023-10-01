@@ -108,7 +108,6 @@ try {
 const position = await Geolocation.getCurrentPosition();
 const { latitude, longitude } = position.coords;
 currentLocation.value = { lat: latitude, lng: longitude };
-console.log("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSIEMA " + position.coords.latitude + " " + position.coords.longitude)
 // Aktualizacja położenia markera
 const customMarker = {
   coordinate: { lat: latitude, lng: longitude },
@@ -200,6 +199,7 @@ function getIcon(value) {
 
     return result;
 }
+const customMarkers = [];
 
 /**
  * Dodawanie do mapy oznaczonych wcześniej zwierząt
@@ -223,7 +223,7 @@ function getIcon(value) {
         // Przetwarzaj dane (w tym przypadku wyświetl je w konsoli)
         console.log(data);
 
-        const customMarkers = [];
+        customMarkers = [];
         for (let i = 0; i < data.length; i++) {
           const customMarker = {
               coordinate: { 
@@ -239,11 +239,19 @@ function getIcon(value) {
                   width: 20,
                   height: 20
               },
+            metadata: {toot: data[i]}
           };
           customMarkers.push(customMarker);
 }
 
         markerIds.value = await newMap.addMarkers(customMarkers);
+        //HALO!!! DODAJ TUTAJ OBSŁUGĘ TYCH KLIKNIĘĆ
+        newMap.setOnMarkerClickListener(async (event) => {
+        console.log('Kliknięto marker:', event);
+        if (event.metadata && event.metadata.toot) {
+            console.log('Kliknięto marker o ID:', event.metadata.toot.id);
+        }
+    });
       })
       .catch(error => {
         // Obsłuż ewentualne błędy (w tym przypadku wyświetl je w konsoli)
