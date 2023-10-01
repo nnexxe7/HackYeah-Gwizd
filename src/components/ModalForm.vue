@@ -10,6 +10,13 @@
         <ion-content class="ion-padding">
           <form @submit.prevent="toot" ref="form">
               <ion-list class="inputs-list">
+                <ion-item>
+                    <ion-label>Upload Photo</ion-label>
+                    <ion-button @click="captureImage">Capture Image</ion-button>
+                </ion-item>
+                <div v-if="photoUrl" class="photo">
+                    <img :src="photoUrl" alt="Captured Image" class="photo-img" />
+                </div>
                   <ion-item>
                       <ion-select class="input-select" name="relatedAnimal" label="Animal type" fill="outline" label-placement="floating">
                           <ion-select-option value=1>Cat</ion-select-option>
@@ -42,6 +49,7 @@
 <script lang="ts">
 import { PropType, defineComponent, ref, computed, onUnmounted } from 'vue';
 import { Global } from './../global'
+import { Camera, CameraResultType } from '@capacitor/camera';
 
 export default defineComponent({
 name: 'LostAnimalForm',
@@ -127,7 +135,9 @@ setup(props,{emit}) {
       form, // Ensure you're returning the ref
       formTitle,
       closeModal,
-      toot
+      toot,
+      captureImage,
+  photoUrl
   }
 } 
 });
@@ -155,5 +165,10 @@ setup(props,{emit}) {
       align-items: center;
       margin-top: 30px;
   }
+  .photo{
+    display: flex;
+    justify-content: center;
+  }
+ 
       
 </style>
