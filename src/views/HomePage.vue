@@ -1,17 +1,28 @@
 <template>
   <AddTootBtnVue />
+  <ion-header>
+    <ion-toolbar>
+      <ion-button slot="start" class="avatar-btn" fill="clear">
+      <ion-avatar class="avatar">
+           <img alt="Up" src="../assets/wildanimal.png" />
+          </ion-avatar>
+      </ion-button>
+      <ion-title class="title">Dzika Orkiestra</ion-title>
+      <ion-button slot="end" class="points-btn" fill="clear">
+        <div></div>
+        <ion-avatar class="avatar">
+           <img alt="star" class="star" src="../assets/point-star.svg" />
+          </ion-avatar>
+          <div class="points-value">{{points}}</div>
+      </ion-button>
+        </ion-toolbar>
+  </ion-header>
 <div>
 <capacitor-google-map
   ref="mapRef"
   style="display: inline-block; width: 100vw; height: 104vh"
 >
 </capacitor-google-map>
-</div>
-<div class="strip">
-<ion-avatar class="avatar">
-  <img alt="Up" src="../assets/wildanimal.png" />
-</ion-avatar>
-<div class="points">PUNKTY</div>
 </div>
 <AddTootBtnVue />
 
@@ -38,6 +49,32 @@ import { Global } from './../global'
 
 const currentLocation = ref({ lat: 0, lng: 0 });
 
+let points=ref(0)
+const fetchPoints = async () => {
+  try {
+    const response = await fetch("http://35.158.22.100:5000/api/users/getuser?username=testuser");
+    
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const responseData = await response.json();
+    points.value = responseData.points;
+  } catch (error) {
+    console.error('There was an error fetching the data:', error);
+  }
+};
+
+let intervalId: any; 
+onMounted(async () => {
+  await fetchPoints();
+
+  intervalId = setInterval(fetchPoints, 5000);
+});
+
+onUnmounted(() => {
+  clearInterval(intervalId);
+});
 // Props
 const props = defineProps<{
 markerData: { coordinate: any; title: string; snippet: string }[];
@@ -281,15 +318,27 @@ console.error("Error getting current location:", error);
 }
 </script>
 <style>
-.strip{
-height: 40px;
-position: absolute;
-top: 0px;
-width: 100%;
-background-color: #fff;
-z-index: 10;
-display: flex;
-justify-content: space-between;
+.title{
+  text-align: center;
+}
+.avatar-btn{
+  width: 70px;
+  margin-right: 10px;
+}
+.points-btn{
+  width: 80px;
+  display: flex;
+}
+.star{
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  left: -26px;
+  top: 3px;
+  justify-content: flex-end;
+}
+.points-value{
+  text-align: left;
 }
 
 </style>
