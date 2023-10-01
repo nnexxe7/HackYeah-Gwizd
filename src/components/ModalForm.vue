@@ -61,6 +61,21 @@ props: {
 },
 setup(props,{emit}) {
   const form = ref(null);
+  const photoUrl = ref('');  // do przechowywania URL zdjęcia
+
+const captureImage = async () => {
+  try {
+    const image = await Camera.getPhoto({
+      quality: 90,
+      allowEditing: false,
+      resultType: CameraResultType.Uri
+    });
+    
+    photoUrl.value = image.webPath;
+  } catch (error) {
+    console.error("Error capturing image:", error);
+  }
+};
   
   const typeMapping: { [key: string]: number } = {
   wildAnimal: 1,
