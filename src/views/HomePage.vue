@@ -200,7 +200,6 @@ function getIcon(value) {
 
     return result;
 }
-const customMarkers = [];
 
 /**
  * Dodawanie do mapy oznaczonych wcześniej zwierząt
@@ -224,7 +223,7 @@ const customMarkers = [];
         // Przetwarzaj dane (w tym przypadku wyświetl je w konsoli)
         console.log(data);
 
-        customMarkers = [];
+        const customMarkers = [];
         for (let i = 0; i < data.length; i++) {
           const customMarker = {
               coordinate: { 
