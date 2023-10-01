@@ -22,7 +22,14 @@ public class CleanupBackgroundService : BackgroundService
 				List<Toot> expired = _tootsService.FindExpired();
 				foreach (Toot toot in expired)
 				{
-					_tootsService.Delete(toot);
+					try
+					{
+						_tootsService.Delete(toot);
+					}
+					catch (Exception ex)
+					{
+
+					}
 				}
 			});
 

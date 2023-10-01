@@ -22,4 +22,12 @@ public class UsersController : ControllerBase
 
 		return Ok(result);
 	}
+
+	[HttpGet("getUser")]
+	public IActionResult GetUser(string userName)
+	{
+		User user = _usersRepository.Get(userName.ToLower());
+
+		return Ok(user);
+	}
 }

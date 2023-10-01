@@ -1,10 +1,5 @@
 ﻿using System.Drawing;
 using System.Drawing.Imaging;
-using Amazon;
-using Amazon.Runtime;
-using Amazon.S3.Transfer;
-using Amazon.S3;
-using Amazon.S3.Model;
 using GWIZD.Core;
 using GWIZD.Model;
 using GWIZD.Service;
@@ -19,14 +14,18 @@ public class TootsService : ITootsService
 	private readonly ISettingsProvider _settingsProvider;
 	private readonly ITootsDuplicateDetector _duplicateDetector;
 	private readonly IUsersService _usersService;
+	private readonly IImagesService _imagesService;
+	private readonly INotificationsProcessor _notificationsProcessor;
 
 
-	public TootsService(ITootsRepository repository, ISettingsProvider settingsProvider, ITootsDuplicateDetector duplicateDetector, IUsersService usersService)
+	public TootsService(ITootsRepository repository, ISettingsProvider settingsProvider, ITootsDuplicateDetector duplicateDetector, IUsersService usersService, IImagesService imagesService, INotificationsProcessor notificationsProcessor)
 	{
 		_repository = repository;
 		_settingsProvider = settingsProvider;
 		_duplicateDetector = duplicateDetector;
 		_usersService = usersService;
+		_imagesService = imagesService;
+		_notificationsProcessor = notificationsProcessor;
 	}
 
 	public List<Toot> FindAll()
@@ -60,6 +59,8 @@ public class TootsService : ITootsService
 			toot.ExpiresAt = DateTime.UtcNow.Add(TimeSpan.FromHours(Consts.ExpiryTimeInHours));
 			_usersService.IncreasePoints(toot.SubmittedBy, Consts.PointsForToot);
 
+			_notificationsProcessor.Process(toot);
+
 			return _repository.Save(toot);
 		}
 
@@ -79,7 +80,7 @@ public class TootsService : ITootsService
 
 		try
 		{
-			DeleteFromS3(toot);
+			_imagesService.DeleteContent(toot);
 		}
 		catch (Exception ex)
 		{
@@ -98,7 +99,7 @@ public class TootsService : ITootsService
 		Task.Run(() =>
 		{
 			string miniaturePhotoUrl = CreateAndUploadMiniature(fileContent, extension);
-			string originalPhotoUrl = UploadToS3(fileContent, extension);
+			string originalPhotoUrl = _imagesService.UploadContent(fileContent, $"{Guid.NewGuid()}{extension}");
 
 			TaskHelper.Repeat(() =>
 			{
@@ -129,7 +130,7 @@ public class TootsService : ITootsService
 				using (var reizedStream = new MemoryStream())
 				{
 					img.Save(reizedStream, ImageFormat.Jpeg);
-					return UploadToS3(reizedStream.ToArray(), "_min" + extension);
+					return _imagesService.UploadContent(reizedStream.ToArray(), $"{Guid.NewGuid()}_min" + extension);
 				}
 			}
 		}
@@ -137,46 +138,5 @@ public class TootsService : ITootsService
 		{
 			return string.Empty;
 		}
-	}
-
-	private void DeleteFromS3(Toot toot)
-	{
-		if (toot.Attachments == null || toot.Attachments.Count == 0) return;
-
-		string accessKey = _settingsProvider.Get("s3_accesskey");
-		string secretKey = _settingsProvider.Get("s3_secretkey");
-		string bucketName = _settingsProvider.Get("bucket_name");
-		var amazonS3Client = new AmazonS3Client(new BasicAWSCredentials(accessKey, secretKey), RegionEndpoint.EUCentral1);
-
-		foreach (Attachment attachment in toot.Attachments.Where(n => n.Type == AttachmentType.Photo))
-		{
-			if (!string.IsNullOrEmpty(attachment.Parameter1))
-			{
-				DeleteObjectResponse? result = amazonS3Client.DeleteObjectAsync(bucketName, Path.GetFileName(attachment.Parameter1)).Result;
-			}
-
-			if (!string.IsNullOrEmpty(attachment.Parameter2))
-			{
-				DeleteObjectResponse? result = amazonS3Client.DeleteObjectAsync(bucketName, Path.GetFileName(attachment.Parameter2)).Result;
-			}
-		}
-	}
-
-	private string UploadToS3(byte[] fileContent, string extension)
-	{
-		Guid photoId = Guid.NewGuid();
-		string fileName = photoId + extension;
-
-		string accessKey = _settingsProvider.Get("s3_accesskey");
-		string secretKey = _settingsProvider.Get("s3_secretkey");
-		var amazonS3Client = new AmazonS3Client(new BasicAWSCredentials(accessKey, secretKey), RegionEndpoint.EUCentral1);
-
-		var fileTransferUtility = new TransferUtility(amazonS3Client);
-		using (var stream = new MemoryStream(fileContent))
-		{
-			fileTransferUtility.Upload(stream, _settingsProvider.Get("bucket_name"), fileName);
-		}
-		
-		return $"https://{_settingsProvider.Get("cloud_front")}/{fileName}";
 	}
 }

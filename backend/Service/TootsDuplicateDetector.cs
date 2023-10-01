@@ -22,7 +22,7 @@ public class TootsDuplicateDetector : ITootsDuplicateDetector
 		FilterDefinitionBuilder<Toot>? b = Builders<Toot>.Filter;
 		FilterDefinition<Toot>? query = b.And(b.Eq(n => n.Type, toot.Type), b.Eq(n => n.RelatedAnimal, toot.RelatedAnimal));
 
-		List<Toot> allToots = _tootsRepository.Find(query); //This can be optimized. POC
+		List<Toot> allToots = _tootsRepository.Find(query); //TODO: This can be optimized.
 
 		if (allToots.Count == 0)
 		{
