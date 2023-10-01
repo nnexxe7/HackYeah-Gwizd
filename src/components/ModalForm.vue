@@ -54,13 +54,13 @@ props: {
 setup(props,{emit}) {
   const form = ref(null);
   
-  const typeMapping = {
-    wildAnimal: 1,
-    animalActivity: 2,
-    humanActivity: 3,
-    lostAnimal: 4,
-    Carcass: 5
-  };
+  const typeMapping: { [key: string]: number } = {
+  wildAnimal: 1,
+  animalActivity: 2,
+  humanActivity: 3,
+  lostAnimal: 4,
+  Carcass: 5
+};
 
   const tootTypeNumeric = computed(() => typeMapping[props.tootType]);
 
@@ -75,42 +75,49 @@ setup(props,{emit}) {
   });
   
   const toot = async () => {
-    try {
-      const formData = new FormData(form.value);
-      console.log(formData.get('isDangerous'))
-      // Create data object from formData
-      const data = {
-        type: tootTypeNumeric.value,
-        relatedAnimal: Number(formData.get('relatedAnimal')),
-        description: formData.get('description'),
-        isDangerous: formData.get('isDangerous') == 'true',
-        location: {
-      "latitude": Global.MarketLat, 
-      "longtitude": Global.MarketLng
-  },
-        submittedBy: 'testuser'
-      };
+  try {
+    const formData = new FormData(form.value);
 
-      const response = await fetch('http://35.158.22.100:5000/api/toots/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      });
+    const data = {
+      type: tootTypeNumeric.value,
+      relatedAnimal: Number(formData.get('relatedAnimal')),
+      description: formData.get('description'),
+      isDangerous: formData.get('isDangerous') == 'true',
+      location: {
+        "latitude": Global.MarketLat, 
+        "longtitude": Global.MarketLng
+      },
+      submittedBy: 'testuser'
+    };
 
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
+    const response = await fetch('http://35.158.22.100:5000/api/toots/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
 
-      const responseData = await response.json();
-      console.log(responseData);
+    if (response.status === 204) {
+      // Obsłuż przypadek, gdy serwer zwraca kod 204 (No Content)
       closeModal();
-
-    } catch (error) {
-      console.error('There was an error sending the data:', error);
+      return;
     }
-  };
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const responseData = await response.json();
+
+    console.log(responseData);
+    closeModal();
+
+  } catch (error) {
+    console.error('There was an error sending the data:', error);
+  }
+};
+
 
   const closeModal = () => {
     emit('close-modal');
