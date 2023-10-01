@@ -71,7 +71,7 @@ try {
 const position = await Geolocation.getCurrentPosition();
 const { latitude, longitude } = position.coords;
 currentLocation.value = { lat: latitude, lng: longitude };
-
+console.log("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSIEMA " + position.coords.latitude + " " + position.coords.longitude)
 // Aktualizacja położenia markera
 const customMarker = {
   coordinate: { lat: latitude, lng: longitude },
@@ -89,6 +89,7 @@ const customMarker = {
 // Usunięcie istniejącego markera i dodanie nowego z aktualnym położeniem
 markerIds?.value && newMap.removeMarkers(markerIds?.value as string[]);
 markerIds.value = await newMap.addMarkers([customMarker]);
+getToots();
 } catch (error) {
 console.error("Error getting current location:", error);
 }
@@ -136,7 +137,82 @@ snippet: "Opis mojej lokalizacji",
 };
 
 markerIds.value = await newMap.addMarkers([customMarker]);
+getToots();
 };
+
+function getIcon(value) {
+    let result;
+
+    switch (value) {
+        case 1:
+            result = "https://d20ttky6ra9b9o.cloudfront.net/wildanimal.png";
+            break;
+        case 2:
+            result = "https://d20ttky6ra9b9o.cloudfront.net/animalactivity.png";
+            break;
+        case 4:
+            result = "https://d20ttky6ra9b9o.cloudfront.net/lostanimal.png";
+            break;
+        case 5:
+            result = "https://d20ttky6ra9b9o.cloudfront.net/carcass.png";
+            break;
+        default:
+            result = "https://d20ttky6ra9b9o.cloudfront.net/wildanimal.png";
+            break;
+    }
+
+    return result;
+}
+
+/**
+ * Dodawanie do mapy oznaczonych wcześniej zwierząt
+ */
+// Określ URL endpointu API
+  const getToots = async () => {
+    const apiUrl = "http://35.158.22.100:5000/api/toots/findall";
+
+    // Użyj funkcji fetch do wysłania zapytania GET do API
+    fetch(apiUrl, {
+        method: 'POST'})
+      .then(response => {
+        // Sprawdź, czy odpowiedź jest poprawna
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        // Jeśli odpowiedź jest poprawna, zwróć jej zawartość jako obiekt JSON
+        return response.json();
+      })
+      .then(async data => {
+        // Przetwarzaj dane (w tym przypadku wyświetl je w konsoli)
+        console.log(data);
+
+        const customMarkers = [];
+        for (let i = 0; i < data.length; i++) {
+          const customMarker = {
+              coordinate: { 
+                  lat: data[i].location.latitude, 
+                  lng: data[i].location.longtitude 
+              },
+              icon: customMarkerIcon,
+              title: "Moja aktualna lokalizacja",
+              snippet: "Opis mojej lokalizacji",
+              iconUrl: getIcon(data[i].type),
+              visible: true,
+              iconSize: {
+                  width: 20,
+                  height: 20
+              },
+          };
+          customMarkers.push(customMarker);
+}
+
+        markerIds.value = await newMap.addMarkers(customMarkers);
+      })
+      .catch(error => {
+        // Obsłuż ewentualne błędy (w tym przypadku wyświetl je w konsoli)
+        console.log('There was a problem with the fetch operation:', error.message);
+      });
+  };
 
 /**
 * Tworzenie mapy
@@ -166,6 +242,7 @@ newMap = await GoogleMap.create({
 
 // Dodawanie markerów
 addSomeMarkers(newMap);
+getToots();
 
 const currentMarker = ref<string | null>(null);
 // Nasłuchiwanie zdarzeń
