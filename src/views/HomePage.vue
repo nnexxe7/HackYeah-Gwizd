@@ -108,7 +108,6 @@ try {
 const position = await Geolocation.getCurrentPosition();
 const { latitude, longitude } = position.coords;
 currentLocation.value = { lat: latitude, lng: longitude };
-console.log("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSIEMA " + position.coords.latitude + " " + position.coords.longitude)
 // Aktualizacja położenia markera
 const customMarker = {
   coordinate: { lat: latitude, lng: longitude },
