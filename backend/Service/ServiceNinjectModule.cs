@@ -10,7 +10,11 @@ public class ServiceNinjectModule : NinjectModule
 		Bind<ITootsRepository>().To<TootsRepository>().InSingletonScope();
 		Bind<ITootsService>().To<TootsService>().InSingletonScope();
 		Bind<IUsersRepository>().To<UsersRepository>().InSingletonScope();
+		Bind<ISubscriptionsRepository>().To<SubscriptionsRepository>().InSingletonScope();
 		Bind<IUsersService>().To<UsersService>().InSingletonScope();
 		Bind<ITootsDuplicateDetector>().To<TootsDuplicateDetector>().InSingletonScope();
+		Bind<IImagesService>().To<ImagesService>().InSingletonScope();
+		Bind<INotificationsSender>().To<NotificationsSender>().InSingletonScope();
+		Bind<INotificationsProcessor>().To<NotificationsProcessor>().InSingletonScope();
 	}
 }

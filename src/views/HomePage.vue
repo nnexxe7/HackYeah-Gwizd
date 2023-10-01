@@ -78,7 +78,12 @@ const customMarker = {
   icon: customMarkerIcon,
   title: "Moja aktualna lokalizacja",
   snippet: "Opis mojej lokalizacji",
+  iconUrl: "https://d20ttky6ra9b9o.cloudfront.net/currentlocation.png",
   visible: true,
+  iconSize: {
+    width: 30,
+    height: 30
+  },
 };
 
 // Usunięcie istniejącego markera i dodanie nowego z aktualnym położeniem
@@ -122,7 +127,12 @@ coordinate: { lat: latitude, lng: longitude },
 icon: customMarkerIcon,
 title: "Moja aktualna lokalizacja",
 snippet: "Opis mojej lokalizacji",
-visible: true,
+  iconUrl: "https://d20ttky6ra9b9o.cloudfront.net/currentlocation.png",
+  visible: true,
+  iconSize: {
+    width: 30,
+    height: 30
+  },
 };
 
 markerIds.value = await newMap.addMarkers([customMarker]);

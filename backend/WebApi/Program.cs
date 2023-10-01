@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.ViewComponents;
 using Ninject;
 using Service;
-using Service.Repositories;
 
 namespace WebApi
 {
